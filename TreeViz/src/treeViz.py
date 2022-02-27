@@ -81,9 +81,6 @@ class TreeViz:
                 and (decisions[index] == decisions[inner_tree.children_right[index]])):
 
             # turn node into a leaf by "unlinking" its children
-            print("Pruning {}".format(index))
-            print("Decision = {}".format(decisions[index]))
-            print("Before: {},{}".format(inner_tree.children_left[index], inner_tree.children_right[index]))
             inner_tree.children_left[index] = TREE_LEAF
             inner_tree.children_right[index] = TREE_LEAF
             print("After: {},{}".format(inner_tree.children_left[index], inner_tree.children_right[index]))
