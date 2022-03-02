@@ -31,6 +31,7 @@ def test_config(tree):
     assert tv._config["setting_A"] == 1
     assert tv._config["setting_B"] is False
 
+
 @pytest.mark.parametrize('tree', (standard_tree(), prunable_tree()))
 def test_write_smoke(tree, tmp_path):
     tv = TreeViz(tree)
@@ -38,6 +39,7 @@ def test_write_smoke(tree, tmp_path):
     d.mkdir()
     p = d / "tree.png"
     tv.write_png(str(p))
+
 
 @pytest.mark.parametrize('tree', (standard_tree(), prunable_tree()))
 def test_prune_no_side_effect(tree):
@@ -47,6 +49,7 @@ def test_prune_no_side_effect(tree):
 
     assert tv == tv_copy
     assert tv is not tv_pruned
+
 
 @pytest.mark.parametrize('tree', (standard_tree(), prunable_tree()))
 def test_prune_idempotent(tree):

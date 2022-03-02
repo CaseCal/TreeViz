@@ -1,16 +1,17 @@
 from sklearn.datasets import load_breast_cancer as load_data
 from sklearn.tree import DecisionTreeClassifier
 
-from TreeViz import TreeViz
+from src import TreeViz
 
 
 # Iris dataset
 clf = DecisionTreeClassifier(random_state=0, min_samples_leaf=5)
 data = load_data()
 clf.fit(data.data, data.target)
+print(data.feature_names)
 
 # TreeViz
-tv = TreeViz(clf)
+tv = TreeViz(clf, feature_names=data.feature_names)
 
 # Raw tree
 tv.write_png("unpruned.png")

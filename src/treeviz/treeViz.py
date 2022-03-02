@@ -10,15 +10,16 @@ import pydotplus
 class TreeViz:
 
     try:
-         _GLOBAL_CONFIG = json.load("config.json")
+        _GLOBAL_CONFIG = json.load("config.json")
     except AttributeError:
-         _GLOBAL_CONFIG = {}
+        _GLOBAL_CONFIG = {}
 
-    def __init__(self, tree_model, config={}, **kwargs):
+    def __init__(self, tree_model, feature_names=None, config={}, **kwargs):
         """
         Create a new TreeViz from an sklearn decision tree
         """
         self._tree_model = tree_model
+        self._feature_names = feature_names
 
         # Update config with global settings -> config arg -> applicable kwargs
         self._config = copy.deepcopy(TreeViz. _GLOBAL_CONFIG)
@@ -28,12 +29,28 @@ class TreeViz:
         # Generate pydotplus graph
         self._refresh_graph()
 
+    def _refresh_graph(self):
+        """
+        Recalculate the graph after making changes to the tree model
+        """
+        dot_data = tree.export_graphviz(
+            self._tree_model,
+            out_file=None,
+            feature_names=self._feature_names,
+            class_names=self._tree_model.classes_.astype(str),
+            filled=True,
+            rounded=True,
+            special_characters=True,
+        )
+        self._graph = pydotplus.graph_from_dot_data(dot_data)
+
+
     def copy(self):
         """
         Make a deep copy of the TreeViz
         """
         tree_copy = copy.deepcopy(self._tree_model)
-        return TreeViz(tree_copy, self._config)
+        return TreeViz(tree_copy, self._feature_names, self._config)
 
     def prune(self):
         """
@@ -52,12 +69,6 @@ class TreeViz:
         Check if inner tree node of id index is a leaf
         """
         inner_tree = self._tree_model.tree_
-        print(index)
-        print(inner_tree.children_left[index])
-        print(inner_tree.children_right[index])
-        print((inner_tree.children_left[index] == TREE_LEAF
-                and inner_tree.children_right[index] == TREE_LEAF))
-        print()
         return (inner_tree.children_left[index] == TREE_LEAF
                 and inner_tree.children_right[index] == TREE_LEAF)
 
@@ -83,21 +94,6 @@ class TreeViz:
             # turn node into a leaf by "unlinking" its children
             inner_tree.children_left[index] = TREE_LEAF
             inner_tree.children_right[index] = TREE_LEAF
-            print("After: {},{}".format(inner_tree.children_left[index], inner_tree.children_right[index]))
-
-    def _refresh_graph(self):
-        """
-        Recalculate the graph after making changes to the tree model
-        """
-
-        dot_data = tree.export_graphviz(
-            self._tree_model,
-            out_file=None,
-            filled=True,
-            rounded=True,
-            special_characters=True,
-        )
-        self._graph = pydotplus.graph_from_dot_data(dot_data)
 
     def write_png(self, filename):
         """
