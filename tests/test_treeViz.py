@@ -3,7 +3,7 @@ import pytest
 from sklearn.datasets import load_iris
 from sklearn.tree import DecisionTreeClassifier
 
-from src import TreeViz
+from src.treeviz import TreeViz
 
 
 def standard_tree():
