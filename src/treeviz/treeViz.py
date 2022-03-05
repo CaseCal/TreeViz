@@ -16,7 +16,7 @@ class TreeViz:
     except AttributeError:
         _GLOBAL_CONFIG = {}
 
-    def __init__(self, tree_model, feature_names=None, config={}, display_scheme='standard',  **kwargs):
+    def __init__(self, tree_model, feature_names=None, config={}, display_scheme=None,  **kwargs):
         """
         Create a new TreeViz from an sklearn decision tree
         """
@@ -29,19 +29,16 @@ class TreeViz:
         self._config.update({k: v for k, v in kwargs.items() if k in self._config})
 
         # Get displayscheme
-        if isinstance(display_scheme, DisplayScheme):
-            self.color_bar = display_scheme
+        if isinstance(display_scheme, (DisplayScheme, type(None))):
+            self.display_scheme = display_scheme
         elif isinstance(display_scheme, str):
-            self.color_bar = DisplayScheme.get_scheme(display_scheme)
+            self.display_scheme = DisplayScheme.get_scheme(display_scheme)
         else:
-            raise TypeError('color_bar must be a ColorBar object or the name of a premade one')
+            raise TypeError('display_scheme must be a DisplayScheme object, the name of a premade one, or None')
 
-        # Generate pydotplus graph
-        self._refresh_graph()
-
-    def _refresh_graph(self):
+    def _create_graph(self):
         """
-        Recalculate the graph after making changes to the tree model
+        Calcualte the DOT graph after making changes to the tree model
         """
         dot_data = tree.export_graphviz(
             self._tree_model,
@@ -52,14 +49,18 @@ class TreeViz:
             rounded=True,
             special_characters=True,
         )
-        self._graph = pydotplus.graph_from_dot_data(dot_data)
+        graph = pydotplus.graph_from_dot_data(dot_data)
+        if self.display_scheme is not None:
+            self.display_scheme.color_graph(graph)
+
+        return graph
 
     def copy(self):
         """
         Make a deep copy of the TreeViz
         """
         tree_copy = copy.deepcopy(self._tree_model)
-        return TreeViz(tree_copy, self._feature_names, self._config)
+        return TreeViz(tree_copy, self._feature_names, self._config, self.display_scheme)
 
     def prune(self):
         """
@@ -70,7 +71,6 @@ class TreeViz:
         """
         newTreeViz = self.copy()
         newTreeViz._prune_index(0)
-        newTreeViz._refresh_graph()
         return newTreeViz
 
     def _is_leaf(self, index):
@@ -109,7 +109,7 @@ class TreeViz:
         Draw TreeViz as a png at filename location
         """
 
-        self._graph.write_png(filename)
+        self._create_graph().write_png(filename)
 
     def __eq__(self, other):
         """

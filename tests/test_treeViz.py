@@ -1,9 +1,10 @@
 import pytest
+from pytest import fixture
 
 from sklearn.datasets import load_iris
 from sklearn.tree import DecisionTreeClassifier
 
-from src.treeviz import TreeViz
+from src.treeviz import TreeViz, DisplayScheme
 
 
 def standard_tree():
@@ -18,9 +19,10 @@ def prunable_tree():
     return clf.fit(data.data, data.target)
 
 
-@pytest.mark.parametrize('tree', (standard_tree(), prunable_tree()))
-def test_init_smoke(tree):
-    TreeViz(tree)
+@pytest.mark.parametrize('tree',  (standard_tree(), prunable_tree()))
+@pytest.mark.parametrize('scheme',  [None, 'standard'])
+def test_init_smoke(tree, scheme):
+    TreeViz(tree, display_scheme=scheme)
 
 
 @pytest.mark.parametrize('tree', (standard_tree(), prunable_tree()))
@@ -33,8 +35,9 @@ def test_config(tree):
 
 
 @pytest.mark.parametrize('tree', (standard_tree(), prunable_tree()))
-def test_write_smoke(tree, tmp_path):
-    tv = TreeViz(tree)
+@pytest.mark.parametrize('scheme',  [None, 'standard'])
+def test_write_smoke(tree, scheme, tmp_path):
+    tv = TreeViz(tree, display_scheme=scheme)
     d = tmp_path / "sub"
     d.mkdir()
     p = d / "tree.png"

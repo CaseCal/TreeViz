@@ -14,6 +14,38 @@ class DisplayScheme():
         else:
             raise TypeError('color_bar must be a ColorBar object or the name of a premade one')
 
+    def color_graph(self, graph):
+        # Traverse nodes
+        for node in graph.get_node_list():
+            label = node.get_attributes().get('label')
+
+            # Skip hidden nodes
+            if label is None:
+                continue
+
+            # Adjust labels
+            labels = self._parse_labels(label[1:-1])
+            labels = self._compute_labels(labels)
+            node.set('label', '<' + '<br/>'.join(
+                "{} = {}".format(k, v).replace(" = None", '') for k, v in labels.items()
+            ) + '>')
+
+            # Set color
+            color_val = self._get_color_value(labels)
+            if color_val is None:
+                node.set_fillcolor('white')
+            else:
+                node.set_fillcolor(self.color_bar.get_color(color_val))
+
+    def _compute_labels(self, labels):
+        return labels
+
+    def _get_color_value(self, labels):
+        if self.metric == 'gini':
+            return float(labels.get('gini', 0))
+
+        return None
+
     @classmethod
     def get_scheme(cls, name):
         """
@@ -26,6 +58,17 @@ class DisplayScheme():
         if name not in schemes:
             raise ValueError("{} is not a recognized premade DisplayScheme".format(name))
         return schemes[name]
+
+    @staticmethod
+    def _parse_labels(labelStr):
+        pairs = [row.split('=') for row in labelStr.split('<br/>')]
+        result = {}
+        for pair in pairs:
+            if len(pair) == 2:
+                result[pair[0].strip()] = pair[1].strip()
+            elif len(pair) == 1:
+                result[pair[0].strip()] = None
+        return result
 
 
 class ColorBar():
@@ -51,7 +94,7 @@ class ColorBar():
         """
 
         bars = {
-            "white_to_green": cls([0, 0, 0], [255, 255, 255])
+            "white_to_green": cls([255, 255, 255], [0, 128, 0])
         }
         if name not in bars:
             raise ValueError("{} is not a recognized premade ColorBar".format(name))
