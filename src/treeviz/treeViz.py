@@ -6,6 +6,8 @@ from sklearn import tree
 from sklearn.tree._tree import TREE_LEAF
 import pydotplus
 
+from .displayscheme import DisplayScheme
+
 
 class TreeViz:
 
@@ -14,7 +16,7 @@ class TreeViz:
     except AttributeError:
         _GLOBAL_CONFIG = {}
 
-    def __init__(self, tree_model, feature_names=None, config={}, **kwargs):
+    def __init__(self, tree_model, feature_names=None, config={}, display_scheme='standard',  **kwargs):
         """
         Create a new TreeViz from an sklearn decision tree
         """
@@ -25,6 +27,14 @@ class TreeViz:
         self._config = copy.deepcopy(TreeViz. _GLOBAL_CONFIG)
         self._config.update(config)
         self._config.update({k: v for k, v in kwargs.items() if k in self._config})
+
+        # Get displayscheme
+        if isinstance(display_scheme, DisplayScheme):
+            self.color_bar = display_scheme
+        elif isinstance(display_scheme, str):
+            self.color_bar = DisplayScheme.get_scheme(display_scheme)
+        else:
+            raise TypeError('color_bar must be a ColorBar object or the name of a premade one')
 
         # Generate pydotplus graph
         self._refresh_graph()
@@ -43,7 +53,6 @@ class TreeViz:
             special_characters=True,
         )
         self._graph = pydotplus.graph_from_dot_data(dot_data)
-
 
     def copy(self):
         """
