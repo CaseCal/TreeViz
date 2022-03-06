@@ -14,6 +14,9 @@ class DisplayScheme():
         else:
             raise TypeError('color_bar must be a ColorBar object or the name of a premade one')
 
+        # Specific trackers
+        self._temp_state = {}
+
     def color_graph(self, graph):
         # Traverse nodes
         for node in graph.get_node_list():
@@ -30,6 +33,10 @@ class DisplayScheme():
                 "{} = {}".format(k, v).replace(" = None", '') for k, v in labels.items()
             ) + '>')
 
+            # Record
+            if 'samples' in labels and "samples" not in self._temp_state:
+                self._temp_state['samples'] = int(labels['samples'])
+
             # Set color
             color_val = self._get_color_value(labels)
             if color_val is None:
@@ -37,13 +44,18 @@ class DisplayScheme():
             else:
                 node.set_fillcolor(self.color_bar.get_color(color_val))
 
+        # Reset state
+        self._temp_state = {}
+
     def _compute_labels(self, labels):
+
         return labels
 
     def _get_color_value(self, labels):
         if self.metric == 'gini':
             return float(labels.get('gini', 0))
-
+        if self.metric == 'sample_size':
+            return int(labels['samples']) / self._temp_state['samples']
         return None
 
     @classmethod
@@ -69,7 +81,6 @@ class DisplayScheme():
             elif len(pair) == 1:
                 result[pair[0].strip()] = None
         return result
-
 
 class ColorBar():
 
