@@ -2,6 +2,7 @@
 import json
 import copy
 
+import numpy as np
 from sklearn import tree
 from sklearn.tree._tree import TREE_LEAF
 import pydotplus
@@ -73,6 +74,27 @@ class TreeViz:
         newTreeViz._prune_index(0)
         return newTreeViz
 
+    def trace(self, samples):
+        """
+        Trace samples through tree and remove all unused nodes
+
+        ### RETURN
+        A new TreeViz without the pruned branches
+        """
+        newTreeViz = self.copy()
+        newTreeViz._trace(samples)
+        return newTreeViz
+
+    def _trace(self, samples):
+        decisions = self._tree_model.decision_path(samples)
+        visit_count = decisions.toarray().sum(axis=0)
+        inner_tree = self._tree_model.tree_
+        for i in range(inner_tree.node_count):
+            inner_tree.n_node_samples[i] = visit_count[i]
+            if visit_count[i] == 0:
+                inner_tree.children_left[i] = TREE_LEAF
+                inner_tree.children_right[i] = TREE_LEAF
+
     def _is_leaf(self, index):
         """
         Check if inner tree node of id index is a leaf
@@ -103,6 +125,9 @@ class TreeViz:
             # turn node into a leaf by "unlinking" its children
             inner_tree.children_left[index] = TREE_LEAF
             inner_tree.children_right[index] = TREE_LEAF
+
+    def _is_empty(self, index, visited_nodes):
+        return index in visited_nodes
 
     def write_png(self, filename):
         """
