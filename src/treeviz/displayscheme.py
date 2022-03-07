@@ -105,7 +105,9 @@ class ColorBar():
         """
 
         bars = {
-            "white_to_green": cls([255, 255, 255], [0, 128, 0])
+            "white_to_green": cls([255, 255, 255], [0, 128, 0]),
+            "white_to_blue": cls([255, 255, 255], [0, 0, 128]),
+            "white_to_red": cls([255, 255, 255], [128, 0, 0]),
         }
         if name not in bars:
             raise ValueError("{} is not a recognized premade ColorBar".format(name))
