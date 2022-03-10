@@ -82,6 +82,7 @@ class DisplayScheme():
                 result[pair[0].strip()] = None
         return result
 
+
 class ColorBar():
 
     def __init__(self, color1, color2):
