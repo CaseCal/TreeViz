@@ -1,3 +1,5 @@
+[![Build Status](https://app.travis-ci.com/CaseCal/TreeViz.svg?branch=main)](https://app.travis-ci.com/CaseCal/TreeViz)
+
 # TreeViz
 
 Visualization toolkit for sklearn Decision Trees using graphviz and pydotplus.
