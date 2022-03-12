@@ -3,9 +3,17 @@ import numpy as np
 
 class DisplayScheme():
 
-    def __init__(self, metric='gini', color_bar='white_to_green', type_to_color='all'):
+    def __init__(self, metric='gini', color_bar='white_to_green'):
+        """
+        Creates a DisplayScheme with given metric and colorbar.
+
+        * metric: String reppresenting the metric to use to color nodes.
+        * color_bar: ColorBar object or name of pre-built one, determines how to convert the value produced by metric into a color.
+
+        ## Return
+        DisplayScheme
+        """
         self.metric = metric
-        self.type_to_color = type_to_color
 
         if isinstance(color_bar, ColorBar):
             self.color_bar = color_bar
@@ -18,6 +26,9 @@ class DisplayScheme():
         self._temp_state = {}
 
     def color_graph(self, graph):
+        """
+        Colors graph according to current metric and colorbar.
+        """
         # Traverse nodes
         for node in graph.get_node_list():
             label = node.get_attributes().get('label')
