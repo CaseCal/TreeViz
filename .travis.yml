@@ -12,6 +12,12 @@ branches:
   only:
     - main
 
+# Needs graphviz
+addons:
+  apt:
+    packages:
+      - graphviz
+
 # list of commands to run to setup the environment
 install:
   - python --version
