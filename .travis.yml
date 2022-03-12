@@ -17,6 +17,7 @@ install:
   - python --version
   - pip install -U pip
   - pip install pytest
+  - pip install pytest-cov
   - pip install codecov
   - pip install flake8
   - pip install -r requirements.txt
