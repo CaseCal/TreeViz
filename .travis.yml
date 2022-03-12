@@ -23,7 +23,7 @@ install:
 
 # the actual commands to run
 script:
-  - pytest
+  - python -m pytest
 
 # generate a coverage report to send to back to user
 after_success:
