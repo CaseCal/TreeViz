@@ -39,9 +39,9 @@ new_tv = tv.prune().trace(decisions)
 
 After this, tv remains unchanged, and new_tv is a new instance that has been pruned and traced.
 
-### DisplayScheme
+### Display
 
-DisplayScheme does not change the shape of the tree, just the appearance of images. DisplayScheme traits include colors, shading and the text within nodes. DisplayScheme changes are generally very reversable, and actually have no impact until an image is actually printed. This gives a few features:
+Display does not change the shape of the tree, just the appearance of images. Display traits include colors, shading and the text within nodes. Display changes are generally very reversable, and actually have no impact until an image is actually printed. This gives a few features:
 
 - Changing the display of a TreeViz instance does not create a new one. DisplayScheme funcs return None to make this clear.
 - DisplayScheme settings that involve calculations (such as computing gradient from gini) are always done lazily. They will not calcualte until the image is printed.
@@ -91,4 +91,186 @@ This second method ends up being more tightly coupled, since it needs a specific
 
 ### pydotplus Graph
 
-The GraphViz object is also a component, build from the export_graphviz sklearn function and modified using pydotplus. This object represents the visual graph, and is a lot more flexible to modify than the DecisionTree. However, it's also not explicitly a tree, and so changing the structure of it can easily break the tree structure.
+The GraphViz object is what is acctually displayed, but is not maintained as a part of the TreeViz object. It is instead re-generated on every call to write. There are a few reasons for this:
+
+- All structure is adjsuted in the sklearn Tree, so the DOT data is not needed.
+- This ensures we do not need to worry about keeping the tree and the graph in sync when changes are made.
+- Reduces the size of the TreeViz objects.
+- Reduces amount of computing in most use cases, since now chaining will not contain repeat calls to create or alter the DOT data.
+
+# <a name='Comparison'></a> Comparison to Matplotlib
+
+## GraphViz
+
+The largest difference is that TreeViz requires GraphViz to operate, while Matplotlib does not. GraphViz offers a much finer grained control over display, but comes at the cost of requiring a sometimes difficult install of a third-party software. Matplotlib is much more limited, but has the benefit of being a pure python library with no extra installs needed.
+
+## Interface
+
+_Note: Some examples in this section are not implemented yet_
+
+### Initialization
+
+The initialization is very similar between TreeViz and Matplotlib. Both require the model, and optionally need the feature_names and class names.
+
+The primary difference is that Matplotlib requires the extra fig level of abstraction, and the actual function returns annotations to the graph, where TreeViz is a self-contained object.
+
+Matplotlib
+
+```python
+fig = plt.figure(figsize=(25,20))
+_ = tree.plot_tree(clf,
+                   feature_names=iris.feature_names,
+                   class_names=iris.target_names
+                )
+```
+
+TreeViz
+
+```python
+tv = TreeViz(clf,
+             feature_names=iris.feature_names,
+             class_names=iris.target_names
+            )
+```
+
+### Printing
+
+Both methods write images very easily, with `savefig(filename)` for matplotlib and `write_png(filename)` for Treeviz. Treeviz does have a different method for different file types, while matplotlib uses an argument. This is because TreeViz uses the underlying pydotplus to create images, and pydotplus has separate methods. This allows for format-specific arguments, which Matplotlib does not have.
+
+### Customization
+
+The Matplotlib visualization is created on initialization, so all customization options have to occur during this stage. This limits it to a [relatively small list of options](https://scikit-learn.org/stable/modules/generated/sklearn.tree.plot_tree.html).
+
+TreeViz does customization through calling structure methods and applying DisplaySchemes. This allows options to be added after initialization, which is slightly more verbose but opens up a much deeper and more natural interface.
+
+For example, to hide the impurity:
+
+Matplotlib
+
+```python
+fig = plt.figure(figsize=(25,20))
+_ = tree.plot_tree( clf,
+                    feature_names=iris.feature_names,
+                    class_names=iris.target_names,
+                    impurity=False,
+                   )
+```
+
+TreeViz with prebuilt scheme
+
+```python
+tv = TreeViz(clf,
+             feature_names=iris.feature_names,
+             class_names=iris.target_names
+            )
+tv.display_scheme = DisplayScheme.get_scheme('simple')
+```
+
+TreeViz with custom scheme
+
+```python
+tv = TreeViz(clf,
+             feature_names=iris.feature_names,
+             class_names=iris.target_names
+            )
+scheme = DisplayScheme(metric='None')
+tv.display_scheme = scheme
+```
+
+## Capability
+
+While TreeViz has some minor interface streamlining compared to Matplotlib, the largest differentiator is in the increased capability.
+
+Matplotlib currently has the options to:
+
+- Show the impurity in all, only root, or none of the nodes
+- Paint the nodes with default colors, and always based off majority class for classification, extremity of values for regression, or purity of node for multi-output.
+- Show samples and values to be proprtions instead of absolute numbers
+
+TreeViz has all of the above capability currently or in the next planned patch, in addition to:
+
+- Prune a tree to only show branches that contain multiple outputs
+- Trace a set of samples through a tree and:
+  - Remove nodes that are not visited, or
+  - Color based on sample paths
+- Color based on impurity, sample size, class, or custom metrics
+- Use custom colors with any of the above functionalities
+- Add custom labels to nodes
+
+For example, consider the case where an analyst wants to color a tree based on class to match some other visualizations.
+
+In TreeViz:
+
+```python
+tv = TreeViz(clf,
+             feature_names=iris.feature_names,
+             class_names=iris.target_names
+            )
+scheme = DisplayScheme(metric='Class', color_bar='red_to_blue')
+tv.display_scheme = scheme
+```
+
+In Matplotlib (Taken from [stackoverflow](https://stackoverflow.com/questions/70437840/how-to-change-colors-for-decision-tree-plot-using-sklearn-plot-tree)):
+
+```python
+colors = ['crimson', 'dodgerblue']
+artists = tree.plot_tree(clf, feature_names=["X", "y"], class_names=colors,
+                         filled=True, rounded=True, ax=ax2)
+for artist, impurity, value in zip(artists, clf.tree_.impurity, clf.tree_.value):
+    # let the max value decide the color; whiten the color depending on impurity (gini)
+    r, g, b = to_rgb(colors[np.argmax(value)])
+    f = impurity * 2 # for N colors: f = impurity * N/(N-1) if N>1 else 0
+    artist.get_bbox_patch().set_facecolor((f + (1-f)*r, f + (1-f)*g, f + (1-f)*b))
+    artist.get_bbox_patch().set_edgecolor('black')
+```
+
+# Extensability
+
+TreeViz was designed to have great extensibility in terms of display customization. This comes at the cost of input flexibility.
+
+## Inputs
+
+TreeViz currently only accepts sklearn DecisionTrees. Extending to other formats would present some difficulty. For those that have a built-in way of converting to DOT data, the DisplayScheme functionality would naturally work, but all of the structural changes would likely need to be overridden, as they currently worked based on the sklearn method of storing the tree.
+
+Anything that does not convert to DOT data will be very difficuly to include, as it will require either a manual conversion to DOT data or a bespoke DisplayScheme sub-class.
+
+## Options
+
+### Structure
+
+Structural changes can be added depending on the ease of calculation. They are all done on the sklearn tree object, so that is the limiting factor on what is possible. There is currently no public interface for adjusting these, so customization will need to come from a subclass or request.
+
+### Display
+
+This is the most extensible part of TreeViz. Both the metric and colorbar are already set up to be extensible and customizable through public interfaces, it only requires passing in a custom function.
+
+It is also easy to expand the pre-built options, and in fact some of them could be converted into generators for ease. For example, there are currently 'red*to_blue', 'green_to_blue' etc. prenamed colorbars. It would be easy to make a generator to allow any `<color1>\_to*<color2>` style name out of a list of standard colors.
+
+The labels are also customizable, allowing any function to take in the labels as a dict and return any dict of new labels. The major limitation here is that the conversion must only require data from the individual node, there's not currently a way to access tree-level data. This could be possible to add but will require more work.
+
+# ToDo List
+
+## Output Formats
+
+These are just boilerplate to the underlying pydotplus library.
+
+- svg
+- jpeg
+
+## Class Names
+
+These will need to be passed in the initialization, same as feature names are now, to dispaly in the tree
+
+## More Metrics
+
+The focus is on bespoke metrics that can't be replicated with the custom input, i.e those that require tree-level data
+
+- Samples as percent of total
+- Test error (Would require new samples)
+- Regression values
+
+## Colors
+
+- ColorBar generators as mentioned above, to allow colot_to_color naming.
+- Implement library (maybe matplotlib?) with color functionality to allow more than just rgb int triples.
+- Add ability for non-linear coloring, such as white in middle or higher alphas at edges, etc.
