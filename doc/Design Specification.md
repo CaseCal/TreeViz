@@ -39,13 +39,13 @@ new_tv = tv.prune().trace(decisions)
 
 After this, tv remains unchanged, and new_tv is a new instance that has been pruned and traced.
 
-### Display
+### DisplayScheme
 
-Display does not change the shape of the tree, just the appearance of images. Display traits include colors, shading and the text within nodes. Display changes are generally very reversable, and actually have no impact until an image is actually printed. This gives a few features:
+DisplayScheme does not change the shape of the tree, just the appearance of images. DisplayScheme traits include colors, shading and the text within nodes. DisplayScheme changes are generally very reversable, and actually have no impact until an image is actually printed. This gives a few features:
 
-- Changing the display of a TreeViz instance does not create a new one. Display funcs return None to make this clear.
-- Display settings that involve calculations (such as computing gradient from gini) are always done lazily. They will not calcualte until the image is printed.
-- Display settings change the pydotplus Graph object, due to the higher flexibility.
+- Changing the display of a TreeViz instance does not create a new one. DisplayScheme funcs return None to make this clear.
+- DisplayScheme settings that involve calculations (such as computing gradient from gini) are always done lazily. They will not calcualte until the image is printed.
+- DisplayScheme settings change the pydotplus Graph object, due to the higher flexibility.
 
 For example, to create multiple version witha different color palette
 

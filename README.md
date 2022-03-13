@@ -11,5 +11,26 @@ TreeViz displays and modifies Decison Trees using [GraphViz](https://www.graphvi
 Once GraphViz is installed, TreeViz can be installed through pip:
 
 ```
-pip install treeviz
+pip install -i https://test.pypi.org/simple/ treeviz
+```
+
+# Examples
+
+See examples folder for more examples
+
+# Documentation
+
+See doc folder for:
+
+- Design
+- Function Specifications
+- Overview Presentation
+- Software Comparison
+
+# Testing
+
+Run using
+
+```
+python -m pytest
 ```

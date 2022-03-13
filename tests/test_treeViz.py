@@ -1,10 +1,9 @@
 import pytest
-from pytest import fixture
 
 from sklearn.datasets import load_iris
 from sklearn.tree import DecisionTreeClassifier
 
-from src.treeviz import TreeViz, DisplayScheme
+from src import TreeViz
 
 
 def standard_tree():

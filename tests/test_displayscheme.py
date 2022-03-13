@@ -1,6 +1,6 @@
 import pytest
 
-from src.treeviz import ColorBar, DisplayScheme
+from src import ColorBar, DisplayScheme
 
 
 def test_colorbar():
