@@ -2,6 +2,27 @@ import numpy as np
 
 
 class DisplayScheme():
+    """
+    DisplayScheme does not change the shape of the tree, just the appearance of images. DisplayScheme traits include colors, shading and the text within nodes. DisplayScheme changes are generally very reversable, and actually have no impact until an image is actually printed. This gives a few features:
+
+    - Changing the display of a TreeViz instance does not create a new one. DisplayScheme funcs return None to make this clear.
+    - DisplayScheme settings that involve calculations (such as computing gradient from gini) are always done lazily. They will not calcualte until the image is printed.
+    - DisplayScheme settings change the pydotplus Graph object, due to the higher flexibility.
+
+    For example, to create multiple version witha different color palette
+
+    ```python
+    tv = TreeViz(clf)
+    tv.set_color(palette= 'red')
+    tv.write_png('red.png')
+    tv.set_color(gradient=my_green_gradient)
+    tv.set_color(gradient=my_blue_gradient)
+    tv.write_png('blue.png')
+    ```
+
+    In the above example, there is only ever one instance of TreeViz. In addition, the gradient custom function my_green_gradient will never be called, because the tree image is not printed while that setting is active.
+
+    """
 
     def __init__(self, metric='gini', color_bar='white_to_green'):
         """
@@ -73,6 +94,11 @@ class DisplayScheme():
     def get_scheme(cls, name):
         """
         Get a premade display scheme
+
+        * name: Name of the scheme, options are ['standard']
+
+        ## Return
+        Premade DisplayScheme
         """
 
         schemes = {
@@ -98,7 +124,7 @@ class ColorBar():
 
     def __init__(self, color1, color2):
         """
-        Color Bars represent a gradient of colors
+        Color Bars represent a gradient of colors, and convert values to a color on teh gradient. Default implementation takes a value from 0 to 1 and translates it onto the gradient.
         """
         self.color_left = np.array(color1)
         self.color_right = np.array(color2)
@@ -114,6 +140,11 @@ class ColorBar():
     def get_bar(cls, name):
         """
         Get a premade color bar
+
+        * name: Name of the color bar. Options are ['white_to_green','white_to_blue','white_to_red']
+
+        ## Return
+        Premade ColorBar
         """
 
         bars = {

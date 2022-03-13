@@ -2,7 +2,6 @@
 import json
 import copy
 
-import numpy as np
 from sklearn import tree
 from sklearn.tree._tree import TREE_LEAF
 import pydotplus
@@ -11,6 +10,33 @@ from .displayscheme import DisplayScheme
 
 
 class TreeViz:
+    """
+    TreeViz is a wrapper for an sklearn DecisionTree model that adds extra dispaly functionality. Each object is initalized with a tree model, and can make structural
+    changes to it to dissplay specific characteristics. Because of this, models are always copies of the original to avoid corruption, and all methods return a new copy of a TreeViz
+
+    It's recommended to include the feature names when initializing, as they are not part of the actual sklearn model.
+    ```python
+    from sklearn.datasets import load_breast_cancer as load_data
+    from sklearn.tree import DecisionTreeClassifier
+
+    from treeviz import TreeViz, DisplayScheme
+
+    # Breast cancer dataset
+    clf = DecisionTreeClassifier(random_state=0, min_samples_leaf=5)
+    data = load_data()
+    clf.fit(data.data, data.target)
+
+    # TreeViz
+    tv = TreeViz(clf, feature_names=data.feature_names)
+
+    # Raw tree
+    orig_name = 'img/original_tree.png'
+    tv.write_png(orig_name)
+
+    # Prune
+    new_tree = tv.prune()
+    ```
+    """
 
     try:
         _GLOBAL_CONFIG = json.load("config.json")
@@ -21,11 +47,11 @@ class TreeViz:
         """
         Create a new TreeViz from an sklearn decision tree
         """
-        self._tree_model = tree_model
+        self._tree_model = copy.deepcopy(tree_model)
         self._feature_names = feature_names
 
         # Update config with global settings -> config arg -> applicable kwargs
-        self._config = copy.deepcopy(TreeViz. _GLOBAL_CONFIG)
+        self._config = copy.deepcopy(TreeViz._GLOBAL_CONFIG)
         self._config.update(config)
         self._config.update({k: v for k, v in kwargs.items() if k in self._config})
 
@@ -59,6 +85,9 @@ class TreeViz:
     def copy(self):
         """
         Make a deep copy of the TreeViz
+
+        ## Return
+        New TreeViz with same tree structure
         """
         tree_copy = copy.deepcopy(self._tree_model)
         return TreeViz(tree_copy, self._feature_names, self._config, self.display_scheme)
